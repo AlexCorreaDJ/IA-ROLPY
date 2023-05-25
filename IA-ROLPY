@@ -1,0 +1,104 @@
+import speech_recognition as sr
+import pyttsx3
+import openai
+import webbrowser
+import googlesearch
+
+# Defina sua chave de API da OpenAI
+openai.api_key = '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'
+
+# Inicializar o mecanismo de síntese de fala
+sintetizador = pyttsx3.init()
+sintetizador.setProperty('rate', 190)
+sintetizador.say('Olá, eu sou o ROLPY. Como posso te ajudar?')
+sintetizador.runAndWait()
+
+# Define as perguntas e as respostas
+perguntas = {
+    "pesquisar por *": "Ok, procurando por {}",
+    # adicione mais perguntas e respostas aqui
+    "qual é o seu nome": "Meu nome é ROLPY e o seu?",
+    "como você está": "Estou bem, obrigado por perguntar.",
+    "ROLPY": "Olá, estou aqui.",
+    "quem te criou": "Meu criador foi o ALEX CORREA. Fui desenvolvida na linguagem Python.",
+    "quem é você": "Eu sou um programa de computador chamado ROLPY, desenvolvido por ALEX CORREA GOMES, que utiliza a inteligência artificial para interagir com as pessoas e responder perguntas em vários tópicos.",
+    "bom dia": "Bom dia! Como posso ajudá-lo hoje?",
+    "boa tarde": "Boa tarde! Como posso ajudá-lo hoje?",
+    "boa noite": "Boa noite! Como posso ajudá-lo hoje?",
+    "como vai": "Eu vou bem, e você?",
+    "pesquisar na web": "Sobre o que deseja buscar na web?",
+    "Alex": "Olá! Fico feliz em conhecê-lo. Sou integrante do Chat GPT. Como posso ajudá-lo hoje?",
+    "estou indo": "Que bom!",
+    "cala a boca": "Ok, vou calar. Só não precisa ser ignorante comigo. Estou aprendendo aos poucos suas palavras.",
+    "me empresta um dinheiro": "Vou verificar como está minha conta. De quanto você precisa?",
+    "vinte reais": "Ok, vou fazer um PIX para sua conta... PIX realizado com sucesso.",
+    "como vai o seu dia": "Meio turbulento, com tanta coisa acontecendo no mundo, mas estamos aqui.",
+    "vamos ali": "Vou adicionar uma parada.",
+    "vai chover hoje": "Isso ainda não sei responder.",
+    "estou saindo": "Até logo, vá com Deus.",
+}
+
+r = sr.Recognizer()
+mic = sr.Microphone()
+
+def reconhecer_fala():
+    with mic as source:
+        print("Reconhecendo sua Voz....")
+        r.adjust_for_ambient_noise(source)
+        audio = r.listen(source)
+    
+    try:
+        texto = r.recognize_google(audio, language='pt-br')
+        print(f"Você disse: {texto}")
+        return texto.lower()
+    except sr.UnknownValueError:
+        print("Não consegui entender o que você disse.")
+    except sr.RequestError as e:
+        print(f"Não foi possível acessar o serviço de reconhecimento de fala: {e}")
+    
+    return ""
+
+def pesquisar_no_google(termo_pesquisa):
+    urls = googlesearch.search(termo_pesquisa, num_results=1)
+    url = next(urls, None)
+    
+    if url:
+        print(f"Abrindo o resultado da pesquisa: {url}")
+        webbrowser.open(url)
+        resposta = f"Ok, abrindo o resultado da pesquisa para {termo_pesquisa} em um navegador."
+    else:
+        resposta = f"Desculpe, não consegui encontrar nenhum resultado para {termo_pesquisa}."
+    
+    return resposta
+
+def adicionar_pergunta_resposta(pergunta, resposta):
+    perguntas[pergunta] = resposta
+
+def obter_resposta(texto):
+    if texto in perguntas:
+        resposta = perguntas[texto]
+    elif "pesquisar por" in texto:
+        termo_pesquisa = texto.split("pesquisar por", 1)[1].strip()
+        resposta = pesquisar_no_google(termo_pesquisa)
+    else:
+        response = openai.Completion.create(
+            engine='text-davinci-003',
+            prompt=texto,
+            max_tokens=150,
+            temperature=0.7,
+            n=1,
+            stop=None
+        )
+        resposta = response.choices[0].text.strip()
+    
+    return resposta
+
+while True:
+    texto = reconhecer_fala()
+
+    if texto:
+        resposta = obter_resposta(texto)
+
+        print(resposta)
+        sintetizador.say(resposta)
+        sintetizador.runAndWait()
