@@ -5,7 +5,7 @@ import webbrowser
 import googlesearch
 
 # Defina sua chave de API da OpenAI
-openai.api_key = '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'
+openai.api_key = 'SUA CHAVE API'
 
 # Inicializar o mecanismo de síntese de fala
 sintetizador = pyttsx3.init()
